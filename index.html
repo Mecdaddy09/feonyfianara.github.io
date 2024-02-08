@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <title>My first three.js app</title>
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
+
+    <style>
+      body {
+        background-color: #ccc;
+        color: #000;
+        overscroll-behavior: none;
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+      }
+      #container {
+        width: 100vw;
+        /*height: 100vh;*/
+      }
+      #exitButton {
+        position: absolute;
+        top: 210px;
+        right: 10px;
+        cursor: pointer;
+        background-color: #ffffff;
+        border: none;
+        padding: 10px;
+        font-size: 16px;
+      }
+
+      #list {
+        position: fixed;
+        color: #000000;
+        top: 15%;
+        left: 0;
+        z-index: 100;
+        font-size: 24 px;
+      }
+      #quitButton {
+        display: none;
+      }
+      canvas {
+        display: block;
+      }
+      .navbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background-color: transparent;
+        backdrop-filter: blur(10px); /* Ajout du flou */
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        z-index: 1000;
+        transition: background-color 0.3s ease;
+      }
+      .navbar-logo {
+        margin-right: 20px;
+      }
+      .navbar-icons {
+        display: flex;
+        align-items: center;
+      }
+      .navbar-icons img {
+        width: 30px;
+        margin-right: 40px;
+        cursor: pointer;
+      }
+      .navbar-menu {
+        display: none; /* Le menu hamburger est initialement caché */
+      }
+      .navbar-menu select {
+        margin-right: 10px;
+      }
+      .navbar-menu input {
+        margin-right: 10px;
+        padding: 5px;
+      }
+      .hamburger {
+        display: none;
+        flex-direction: column;
+        cursor: pointer;
+      }
+      .hamburger div {
+        width: 25px;
+        height: 3px;
+        background-color: #333;
+        margin: 5px 0;
+        transition: 0.4s;
+      }
+
+      /* Responsive Styles */
+      @media screen and (max-width: 768px) {
+        .navbar {
+          padding: 10px 5px;
+        }
+        .navbar-logo {
+          margin-right: 10px;
+        }
+        .navbar-icons img {
+          width: 18px;
+          margin-right: 8px;
+        }
+        .navbar-menu {
+          flex-direction: column;
+          position: absolute;
+          top: 60px;
+          left: 0;
+          right: 0;
+          background-color: rgba(255, 255, 255, 0.9);
+          padding: 10px;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+          display: none;
+        }
+        .navbar-menu.show {
+          display: flex;
+        }
+        .navbar-menu select,
+        .navbar-menu input {
+          margin: 5px 0;
+        }
+        .hamburger {
+          display: flex;
+        }
+      }
+
+      /* Style supplémentaire pour le mode sombre */
+      .dark-mode {
+        background-color: #333;
+        color: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="navbar" id="navbar">
+      <div class="navbar-logo">
+        <h2>Feon'i Fianarantsoa</h2>
+      </div>
+      <div class="navbar-icons">
+        <img id="soundIcon" src="./img/music.png" alt="Musique" />
+        <img
+          id="darkModeIcon"
+          src="./img/day-mode.png"
+          alt="Mode Dark"
+          onclick="toggleDarkMode()"
+        />
+        <img src="./img/map.png" alt="Maps" />
+      </div>
+      <div class="hamburger" id="hamburger">
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+    </div>
+    <div id="progress-container">
+      <!-- Barre de progression -->
+    </div>
+    <button id="quitButton">Quitter</button>
+    <div id="list"></div>
+    <div id="exitButton">Exit</div>
+    <!-- <div id="container"></div> -->
+    <div id="cont" class="dark-mode"></div>
+    <div id="container" class="dark-mode"></div>
+    <script type="module" src="izytransition.js"></script>
+
+    <audio id="audioPlayer" src="./music/mariage.mp3"></audio>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        var isMuted = false;
+        var audioPlayer = document.getElementById("audioPlayer");
+        var soundIcon = document.getElementById("soundIcon");
+
+        function toggleMute() {
+          isMuted = !isMuted;
+
+          if (isMuted) {
+            audioPlayer.pause();
+            soundIcon.src = "./img/mute.png";
+            console.log("Sound muted");
+          } else {
+            audioPlayer.play().catch((error) => {
+              console.error("Failed to play audio: ", error);
+            });
+            soundIcon.src = "./img/music.png";
+            console.log("Sound unmuted");
+          }
+        }
+
+        function toggleDarkMode() {
+          // Obtenez le corps du document
+          var body = document.body;
+
+          // Basculez l'état du mode sombre
+          var isDarkMode = body.classList.toggle("dark-mode");
+
+          // Mettez en œuvre la logique du mode sombre
+          if (isDarkMode) {
+            // Styles pour le mode sombre
+            console.log("Dark Mode activated");
+
+            // Changez l'icône en mode sombre
+            document.getElementById("darkModeIcon").src =
+              "./img/night-mode.png";
+          } else {
+            // Styles pour le mode clair
+            console.log("Dark Mode deactivated");
+
+            // Changez l'icône en mode clair
+            document.getElementById("darkModeIcon").src = "./img/day-mode.png";
+          }
+        }
+
+        function changeCameraView() {
+          // Mettez votre logique pour changer la vue de la caméra dans three.js
+          console.log("Change Camera View");
+        }
+
+        function toggleMenu() {
+          var navbarMenu = document.querySelector(".navbar-menu");
+          navbarMenu.classList.toggle("show");
+        }
+
+        // Ajout d'identifiants aux autres icônes
+        var darkModeIcon = document.querySelector(
+          ".navbar-icons img:nth-child(2)"
+        );
+        var mapIcon = document.querySelector(".navbar-icons img:nth-child(3)");
+        var hamburger = document.getElementById("hamburger");
+
+        // Ajout des événements aux autres icônes
+        darkModeIcon.addEventListener("click", toggleDarkMode);
+        mapIcon.addEventListener("click", changeCameraView);
+        hamburger.addEventListener("click", toggleMenu);
+
+        // Change la couleur de fond de la barre de navigation lors du défilement
+        window.onscroll = function () {
+          var navbar = document.getElementById("navbar");
+          if (
+            document.body.scrollTop > 20 ||
+            document.documentElement.scrollTop > 20
+          ) {
+            navbar.style.backgroundColor = "rgba(255, 255, 255, 0.8)";
+          } else {
+            navbar.style.backgroundColor = "transparent";
+          }
+        };
+
+        // Ajout de l'événement à l'icône Dark Mode
+        darkModeIcon.addEventListener("click", toggleDarkMode);
+
+        // Ajout de l'événement à l'icône Sound
+        soundIcon.addEventListener("click", toggleMute);
+      });
+    </script>
+  </body>
+</html>

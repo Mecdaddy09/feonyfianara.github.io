@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three.js Day/Night Mode</title>
+  </head>
+  <body>
+    <button id="toggleMode">Toggle Mode</button>
+    <script type="module">
+      import * as THREE from "https://threejs.org/build/three.module.js";
+
+      let scene, camera, renderer;
+      let isDarkMode = false;
+      let ambientLightDay, ambientLightNight;
+      let cube;
+
+      init();
+      animate();
+
+      function init() {
+        // Scene
+        scene = new THREE.Scene();
+        // Set the initial scene background color
+        scene.background = new THREE.Color(0xdddddd);
+
+        // Camera
+        camera = new THREE.PerspectiveCamera(
+          75,
+          window.innerWidth / window.innerHeight,
+          0.1,
+          1000
+        );
+        camera.position.z = 5;
+
+        // Renderer
+        renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Cube
+        const geometry = new THREE.BoxGeometry();
+        // Set the initial color for the cube
+        const material = new THREE.MeshPhongMaterial({ color: 0x00ff00 });
+        cube = new THREE.Mesh(geometry, material);
+        scene.add(cube);
+
+        // Light
+        const light = new THREE.PointLight(0xffffff, 1, 100);
+        light.position.set(0, 0, 5);
+        scene.add(light);
+
+        // Ambient Light for Day Mode
+        ambientLightDay = new THREE.AmbientLight(0xffffff);
+        scene.add(ambientLightDay);
+
+        // Ambient Light for Night Mode
+        ambientLightNight = new THREE.AmbientLight(0x404040);
+        ambientLightNight.visible = false;
+        scene.add(ambientLightNight);
+
+        // Event listener for toggle button
+        document
+          .getElementById("toggleMode")
+          .addEventListener("click", toggleMode);
+      }
+
+      function animate() {
+        requestAnimationFrame(animate);
+
+        // Rotate the cube
+        if (cube) {
+          cube.rotation.x += 0.01;
+          cube.rotation.y += 0.01;
+        }
+
+        renderer.render(scene, camera);
+      }
+
+      // Définir la fonction toggleMode globalement
+      function toggleMode() {
+        isDarkMode = !isDarkMode;
+
+        // Toggle Ambient Light visibility
+        ambientLightDay.visible = !isDarkMode;
+        ambientLightNight.visible = isDarkMode;
+
+        // Adjust the background color of the scene
+        scene.background = isDarkMode
+          ? new THREE.Color(0x222222)
+          : new THREE.Color(0xdddddd);
+
+        // Adjust the color of the cube
+        if (cube) {
+          cube.material.color.set(isDarkMode ? 0xff0000 : 0x00ff00);
+        }
+      }
+    </script>
+  </body>
+</html>
