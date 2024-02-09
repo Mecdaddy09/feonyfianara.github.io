@@ -82,11 +82,7 @@ void main() {
 
   gl_FragColor = vec4(uv1, 0.0, 1.);
   gl_FragColor = finalTexture;
-}
-
- 
-         
-  
+}  
 `;
 
 const vertex = `
@@ -212,7 +208,7 @@ export default class Sketch {
     // Create:
     const myText = new Text();
     this.scene360.add(myText);
-
+    console.myText();
     // Set properties to configure:
     myText.text = "Studio EMIT";
     myText.fontSize = 1;

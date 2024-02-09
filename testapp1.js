@@ -1,9 +1,15 @@
 import * as THREE from "https://threejsfundamentals.org/threejs/resources/threejs/r132/build/three.module.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { Text } from "troika-three-text";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+
 import GeoTIFF from "geotiff";
 import * as GEOLIB from "geolib";
-
 import { BufferGeometry } from "three";
+import gsap from "gsap";
+import GUI from "lil-gui";
+import sphere360 from "./img/vita360_stitch.jpg";
+import earth from "./img/cartedemode360.jpg";
 
 const center = [47.0852686, -21.4563308];
 let scene,
@@ -56,15 +62,6 @@ function init() {
     1000
   );
   camera360.position.x = -3;
-
-  // Create the new controls
-  controls360 = new OrbitControls(camera360, renderer.domElement);
-  controls360.enableDamping = true;
-  controls360.dampingFactor = 0.05;
-  controls360.screenSpacePanning = false;
-  controls360.enableZoom = false;
-  controls360.maxPolarAngle = Math.PI / 1.5; // par exemple, 90 degrés
-  controls360.minPolarAngle = 0.9;
 
   // Init group
   iR = new THREE.Group();
@@ -127,16 +124,28 @@ function init() {
 
   controls.maxPolarAngle = Math.PI / 2.1;
 
+  // Create the new controls
+  controls360 = new OrbitControls(camera360, renderer.domElement);
+  controls360.enableDamping = true;
+  controls360.dampingFactor = 0.05;
+  controls360.screenSpacePanning = false;
+  controls360.enableZoom = false;
+  controls360.maxPolarAngle = Math.PI / 1.5; // par exemple, 90 degrés
+  controls360.minPolarAngle = 0.9;
+
   controls.update();
 
   MAT_BUILDING = new THREE.MeshPhongMaterial();
 
+  create360();
   getGeoJson();
 }
 
 function animate() {
   requestAnimationFrame(animate);
   renderer.render(scene, camera);
+  controls.update();
+  renderer.render(scene360, camera360);
   controls.update();
   UpdateAniLine();
 }
@@ -163,6 +172,41 @@ document.getElementById("cont").addEventListener("mousedown", (event) => {
     console.log(hitted);
   }
 });
+
+function create360() {
+  // Nettoyer la scène avant d'ajouter de nouveaux éléments
+  while (scene360.children.length > 0) {
+    scene360.remove(scene360.children[0]);
+  }
+
+  const geometry = new THREE.SphereGeometry(10, 30, 30);
+  let t = new THREE.TextureLoader().load(sphere360);
+  t.wrapS = THREE.RepeatWrapping;
+  t.repeat.x = -1;
+  const material = new THREE.MeshBasicMaterial({
+    map: t,
+    side: THREE.BackSide,
+  });
+  const sphere = new THREE.Mesh(geometry, material);
+  scene360.add(sphere);
+
+  // Create:
+  const myText = new Text();
+  scene360.add(myText);
+
+  // Set properties to configure:
+  myText.text = "Studio EMIT";
+  myText.fontSize = 1;
+  myText.anchorX = "center";
+  myText.font = "./fonts/Montserrat-Regular.otf";
+  myText.position.z = -4;
+  myText.color = 0x9ec3e9;
+
+  console.log("Scene 360 created with text:", myText.text);
+
+  // Update the rendering:
+  myText.sync();
+}
 
 function getGeoJson() {
   fetch("./assets/edinburgh_road.geojson")
