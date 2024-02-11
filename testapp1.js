@@ -1,8 +1,7 @@
-import * as THREE from "https://threejsfundamentals.org/threejs/resources/threejs/r132/build/three.module.js";
+import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { Text } from "troika-three-text";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-
 import GeoTIFF from "geotiff";
 import * as GEOLIB from "geolib";
 import { BufferGeometry } from "three";
@@ -35,7 +34,6 @@ animate();
 function init() {
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x222222);
-  //scene.fog = new THREE.FogExp2(0x222222, 0.04);
 
   camera = new THREE.PerspectiveCamera(
     25,
@@ -48,11 +46,6 @@ function init() {
   // Create the new scene
   scene360 = new THREE.Scene();
   scene360.background = new THREE.Color(0xffffff);
-  // Créez un bouton Exit
-  // const exitButton = document.getElementById("exitButton");
-
-  // Ajoutez un gestionnaire d'événements pour le clic sur le bouton Exit
-  // exitButton.addEventListener("click", handleExitButtonClick);
 
   // Create the new camera
   camera360 = new THREE.PerspectiveCamera(
@@ -84,18 +77,7 @@ function init() {
   scene.add(iR_Roads);
 
   // Lights
-
-  let light0 = new THREE.AmbientLight(0xfafafa, 0.25);
-
-  let light1 = new THREE.PointLight(0xfafafa, 0.4);
-  light1.position.set(200, 90, 40);
-
-  let light2 = new THREE.PointLight(0xfafafa, 0.4);
-  light2.position.set(200, 90, -40);
-
-  scene.add(light0);
-  scene.add(light1);
-  scene.add(light2);
+  lighting();  // Ajoutez cette ligne pour appeler la fonction lighting()
 
   const gridHelper = new THREE.GridHelper(
     80,
@@ -113,15 +95,11 @@ function init() {
 
   controls = new OrbitControls(camera, renderer.domElement);
 
-  // controls.addEventListener( 'change', render ); // Call this only in static scenes (i.e., if there is no animation loop)
-
-  controls.enableDamping = true; // An animation loop is required when either damping or auto-rotation is enabled
+  controls.enableDamping = true;
   controls.dampingFactor = 0.05;
-
   controls.screenSpacePanning = false;
   controls.minDistance = 3.5;
   controls.maxDistance = 55;
-
   controls.maxPolarAngle = Math.PI / 2.1;
 
   // Create the new controls
@@ -130,7 +108,7 @@ function init() {
   controls360.dampingFactor = 0.05;
   controls360.screenSpacePanning = false;
   controls360.enableZoom = false;
-  controls360.maxPolarAngle = Math.PI / 1.5; // par exemple, 90 degrés
+  controls360.maxPolarAngle = Math.PI / 1.5;
   controls360.minPolarAngle = 0.9;
 
   controls.update();
@@ -145,15 +123,12 @@ function animate() {
   requestAnimationFrame(animate);
   renderer.render(scene, camera);
   controls.update();
-  renderer.render(scene360, camera360);
-  controls.update();
   UpdateAniLine();
 }
 
 function onWindowResize() {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
-
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
@@ -275,7 +250,18 @@ function addBuilding(data, info, Height = 1) {
   geometry.rotateX(Math.PI / 2);
   geometry.rotateZ(Math.PI);
 
-  const mesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial());
+  const mesh = new THREE.Mesh(
+    geometry,
+    new THREE.MeshBasicMaterial({ color: 0xffffff })
+  );
+
+  if (geometry instanceof THREE.ExtrudeGeometry) {
+    mesh.material = new THREE.MeshPhongMaterial({
+      color: 0xffffff,
+      shininess: 30,
+    });
+  }
+
   scene.add(mesh);
 
   let helper = genHelper(geometry);
@@ -309,7 +295,6 @@ function addRoad(data, info, matRoads) {
   let line = new THREE.Line(geometry, matRoads);
   line.info = info;
 
-  // Instead of using computeBoundingBox, calculate dimensions manually
   let boundingBox = new THREE.Box3().setFromBufferAttribute(
     geometry.attributes.position
   );
@@ -320,7 +305,6 @@ function addRoad(data, info, matRoads) {
   line.position.set(line.position.x, 0.5, line.position.Z);
 
   if (FLAG_ROAD_ANI) {
-    // Calculate the length of the line
     let lineLength = 0;
 
     for (let i = 0; i < points.length - 1; i++) {
@@ -375,7 +359,7 @@ function genHelper(geometry) {
   }
   let box3 = geometry.boundingBox;
   if (!isFinite(box3.max.x)) {
-    return null; // Return null if the bounding box is not valid
+    return null;
   }
   let helper = new THREE.Box3Helper(box3, 0xffff00);
   helper.updateMatrixWorld();
@@ -419,18 +403,23 @@ function Fire(pointer) {
 }
 
 function GPSRelativePosition(objPosi, centerPosi) {
-  // Get GPS distance
   const dis = GEOLIB.getDistance(objPosi, centerPosi);
-
-  // Get direction angle
   const bearing = GEOLIB.getRhumbLineBearing(objPosi, centerPosi);
-
-  // Calculate x by centerPosi.x + distance * cos(rad)
   const x = centerPosi[0] + dis * Math.cos((bearing * Math.PI) / 180);
-
-  // Calculate y by centerPosi.y + distance * sin(rad)
   const y = centerPosi[1] + dis * Math.sin((bearing * Math.PI) / 180);
 
-  // Invert x (it works)
   return [-x / 100, y / 100];
+}
+
+// Nouvelle fonction pour l'éclairage
+function lighting() {
+  const ambient = new THREE.AmbientLight(0xfafafa, 0.25);
+  scene.add(ambient);
+
+  const hemi = new THREE.HemisphereLight(0xffffbb, 0x080820, 1);
+  scene.add(hemi);
+
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+  directionalLight.position.set(50, 50, -50);
+  scene.add(directionalLight);
 }
